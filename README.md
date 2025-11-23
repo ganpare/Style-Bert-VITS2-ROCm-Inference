@@ -2,6 +2,8 @@
 
 **利用の際は必ず[お願いとデフォルトモデルの利用規約](/docs/TERMS_OF_USE.md)をお読みください。**
 
+> ⚠️ **注意**: このフォークはROCmでの推論を目指す開発中のリポジトリです。まだ完成していません。
+
 Bert-VITS2 with more controllable voice styles.
 
 https://github.com/litagin02/Style-Bert-VITS2/assets/139731664/e853f9a2-db4a-4202-a1dd-56ded3c562a0
