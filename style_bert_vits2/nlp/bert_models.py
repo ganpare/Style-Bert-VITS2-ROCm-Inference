@@ -237,8 +237,8 @@ def unload_model(language: Languages) -> None:
 
     if language in __loaded_models:
         del __loaded_models[language]
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        from style_bert_vits2.utils import clear_gpu_cache
+        clear_gpu_cache()
         gc.collect()
         logger.info(f"Unloaded the {language.name} BERT model")
 

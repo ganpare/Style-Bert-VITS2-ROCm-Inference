@@ -25,6 +25,7 @@ from style_bert_vits2.constants import (
 )
 from style_bert_vits2.logging import logger
 from style_bert_vits2.models.hyper_parameters import HyperParameters
+from style_bert_vits2.utils import clear_gpu_cache
 from style_bert_vits2.voice import adjust_voice
 
 
@@ -245,9 +246,8 @@ class TTSModel:
             del self.net_g
             self.net_g = None
 
-            # CUDA キャッシュをクリア
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+            # GPU キャッシュをクリア（CUDA/ROCm対応）
+            clear_gpu_cache()
 
         # ONNX 推論時
         if self.onnx_session is not None:

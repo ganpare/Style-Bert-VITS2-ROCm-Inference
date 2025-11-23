@@ -7,6 +7,7 @@ from style_bert_vits2.constants import Languages
 from style_bert_vits2.logging import logger
 from style_bert_vits2.models import commons, utils
 from style_bert_vits2.models.hyper_parameters import HyperParameters
+from style_bert_vits2.utils import clear_gpu_cache
 from style_bert_vits2.models.models import SynthesizerTrn
 from style_bert_vits2.models.models_jp_extra import (
     SynthesizerTrn as SynthesizerTrnJPExtra,
@@ -265,7 +266,6 @@ def infer(
             en_bert,
             style_vec,
         )  # , emo
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        clear_gpu_cache()
 
         return audio

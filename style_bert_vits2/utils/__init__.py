@@ -2,6 +2,54 @@ from collections.abc import Sequence
 from typing import Any, Union
 
 import onnxruntime
+import torch
+
+
+def is_gpu_available() -> bool:
+    """
+    CUDAまたはROCmのGPUが利用可能かどうかを判定する
+    
+    Returns:
+        bool: GPUが利用可能な場合True
+    """
+    if torch.cuda.is_available():
+        return True
+    # ROCmの場合はtorch.version.hipが存在する
+    if hasattr(torch.version, 'hip') and torch.version.hip is not None:
+        try:
+            # ROCmデバイスが存在するか確認
+            return torch.cuda.device_count() > 0
+        except Exception:
+            return False
+    return False
+
+
+def clear_gpu_cache() -> None:
+    """
+    CUDAまたはROCmのGPUキャッシュをクリアする
+    """
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    # ROCmの場合もtorch.cuda.empty_cache()が動作する可能性があるが、
+    # 明示的にROCmの場合は別の処理が必要な場合がある
+    if hasattr(torch.version, 'hip') and torch.version.hip is not None:
+        try:
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
+
+
+def get_default_device() -> str:
+    """
+    デフォルトのデバイスを取得する（CUDA/ROCm/CPU）
+    
+    Returns:
+        str: デフォルトデバイス文字列（"cuda", "cpu"など）
+    """
+    if is_gpu_available():
+        # ROCmの場合は"cuda"として扱う（PyTorchのROCmサポートでは"cuda"デバイス名を使用）
+        return "cuda"
+    return "cpu"
 
 
 def torch_device_to_onnx_providers(
