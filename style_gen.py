@@ -5,7 +5,12 @@ from typing import Any
 import numpy as np
 import torch
 from numpy.typing import NDArray
-from pyannote.audio import Inference, Model
+try:
+    from pyannote.audio import Inference, Model
+except ImportError as exc:
+    raise ImportError(
+        "pyannote.audio is required for style vector inference. Install it manually if needed."
+    ) from exc
 from tqdm import tqdm
 
 from config import get_config

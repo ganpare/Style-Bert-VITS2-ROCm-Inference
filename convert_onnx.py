@@ -32,9 +32,19 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import BinaryIO, cast
 
-import onnx
+try:
+    import onnx
+except ImportError as exc:
+    raise ImportError(
+        "onnx tooling is optional. Install onnx and onnxconverter-common to use this script."
+    ) from exc
 import torch
-from onnxsim import model_info, simplify
+try:
+    from onnxsim import model_info, simplify
+except ImportError as exc:
+    raise ImportError(
+        "onnx-simplifier is required for this conversion script. Install onnxsim manually if needed."
+    ) from exc
 from rich import print
 from rich.rule import Rule
 from rich.style import Style

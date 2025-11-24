@@ -13,7 +13,7 @@ import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from sklearn.cluster import DBSCAN, AgglomerativeClustering, KMeans
 from sklearn.manifold import TSNE
-from umap import UMAP
+from sklearn.decomposition import PCA
 
 from config import get_path_config
 from default_style import save_styles_by_dirs
@@ -29,7 +29,7 @@ MAX_CLUSTER_NUM = 10
 MAX_AUDIO_NUM = 10
 
 tsne = TSNE(n_components=2, random_state=42, metric="cosine")
-umap = UMAP(n_components=2, random_state=42, metric="cosine", n_jobs=1, min_dist=0.0)
+pca = PCA(n_components=2, random_state=42)
 
 wav_files: list[Path] = []
 x = np.array([])
@@ -52,7 +52,7 @@ def load(model_name: str, reduction_method: str):
     if reduction_method == "t-SNE":
         x_reduced = tsne.fit_transform(x)
     elif reduction_method == "UMAP":
-        x_reduced = umap.fit_transform(x)
+        x_reduced = pca.fit_transform(x)
     else:
         raise ValueError("Invalid reduction method")
     x_reduced = np.asarray(x_reduced)

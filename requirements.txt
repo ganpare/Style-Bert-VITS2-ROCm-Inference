@@ -6,28 +6,25 @@ g2p_en
 GPUtil
 gradio>=4.32
 jieba
-librosa
 loguru
 nltk<=3.8.1
 num2words
-numpy<2
-onnx
-onnxconverter-common
+kiwisolver>=1.4.7
+fonttools>=4.60.0
+contourpy>=1.2.0
+cycler>=0.12.1
 onnxruntime
+numpy<2
 onnxruntime-directml; sys_platform == 'win32'
 # onnxruntime-gpu; sys_platform != 'darwin'  <-- コメントアウト
-onnxsim-prebuilt
 protobuf==4.25
 psutil
 punctuators
-pyannote.audio>=3.1.0
 pyloudnorm
 pyopenjtalk-dict
 pypinyin
 pyworld-prebuilt
-stable_ts
-tensorboard
+tensorboard==2.14.0
 # torch<2.4       <-- コメントアウト
 # torchaudio<2.4  <-- コメントアウト
 transformers
-umap-learn

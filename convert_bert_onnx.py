@@ -29,11 +29,26 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import numpy as np
-import onnx
+try:
+    import onnx
+except ImportError as exc:
+    raise ImportError(
+        "onnx tooling is optional. Install onnx and onnxconverter-common to use this script."
+    ) from exc
 import torch
-from onnxconverter_common import float16 as float16_converter
+try:
+    from onnxconverter_common import float16 as float16_converter
+except ImportError as exc:
+    raise ImportError(
+        "onnxconverter-common is required for this conversion script. Install it manually if needed."
+    ) from exc
 from onnxruntime import InferenceSession
-from onnxsim import model_info, simplify
+try:
+    from onnxsim import model_info, simplify
+except ImportError as exc:
+    raise ImportError(
+        "onnx-simplifier is required for this conversion script. Install onnxsim manually if needed."
+    ) from exc
 from rich import print
 from rich.rule import Rule
 from rich.style import Style

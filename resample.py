@@ -4,9 +4,12 @@ from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any
 
-import librosa
+import numpy as np
 import pyloudnorm as pyln
 import soundfile
+import torch
+import torchaudio
+import torchaudio.functional as AF
 from numpy.typing import NDArray
 from tqdm import tqdm
 
@@ -33,6 +36,34 @@ def normalize_audio(data: NDArray[Any], sr: int):
     return data
 
 
+def _load_audio(path: Path, target_sr: int) -> tuple[NDArray[Any], int]:
+    """torchaudioを使って音声を読み込むヘルパー"""
+    waveform, sr = torchaudio.load(path.as_posix())
+    if waveform.dim() > 1 and waveform.size(0) > 1:
+        waveform = torch.mean(waveform, dim=0, keepdim=True)
+    if sr != target_sr:
+        waveform = AF.resample(waveform, sr, target_sr)
+        sr = target_sr
+    return waveform.squeeze(0).cpu().numpy(), sr
+
+
+
+def _trim_silence(wav: NDArray[Any], top_db: float = 30.0) -> NDArray[Any]:
+    """librosa.effects.trim の簡易版"""
+    if wav.size == 0:
+        return wav
+    abs_wav = np.abs(wav)
+    peak = np.max(abs_wav)
+    if peak <= 0:
+        return wav
+    threshold = peak * (10 ** (-top_db / 20))
+    idx = np.where(abs_wav > threshold)[0]
+    if idx.size == 0:
+        return wav
+    start, end = idx[0], idx[-1] + 1
+    return wav[start:end]
+
+
 def resample(
     file: Path,
     input_dir: Path,
@@ -50,7 +81,7 @@ def resample(
         # wav以外にもmp3やoggやflacなども読める
         wav: NDArray[Any]
         sr: int
-        wav, sr = librosa.load(file, sr=target_sr)
+        wav, sr = _load_audio(file, target_sr)
         if normalize:
             try:
                 wav = normalize_audio(wav, sr)
@@ -60,7 +91,7 @@ def resample(
                     f"Skip normalize due to less than {DEFAULT_BLOCK_SIZE} second audio: {file}"
                 )
         if trim:
-            wav, _ = librosa.effects.trim(wav, top_db=30)
+            wav = _trim_silence(wav, top_db=30)
         relative_path = file.relative_to(input_dir)
         # ここで拡張子が.wav以外でも.wavに置き換えられる
         output_path = output_dir / relative_path.with_suffix(".wav")
