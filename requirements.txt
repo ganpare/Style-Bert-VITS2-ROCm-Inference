@@ -30,3 +30,4 @@ tensorboard==2.14.0
 # torchaudio<2.4  <-- コメントアウト
 transformers
 scikit-learn>=1.4.2
+numba

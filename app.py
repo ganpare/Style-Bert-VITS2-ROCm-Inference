@@ -10,13 +10,26 @@ except Exception:  # pragma: no cover
     gradio_client_utils = None
 else:
     _original_get_type = gradio_client_utils.get_type
+    _original_json_schema_to_python_type = gradio_client_utils.json_schema_to_python_type
 
     def _safe_get_type(schema):
         if isinstance(schema, bool):
             return "Any" if schema else "Never"
+        if not isinstance(schema, dict):
+            return "Any"
         return _original_get_type(schema)
 
+    def _safe_json_schema_to_python_type(schema, defs=None):
+        try:
+            return _original_json_schema_to_python_type(schema, defs)
+        except Exception:
+            # API情報の取得に失敗した場合でも、基本構造を返す
+            if isinstance(schema, dict) and "type" in schema:
+                return schema.get("type", "Any")
+            return "Any"
+
     gradio_client_utils.get_type = _safe_get_type
+    gradio_client_utils.json_schema_to_python_type = _safe_json_schema_to_python_type
 
 from config import get_path_config
 from gradio_tabs.convert_onnx import create_onnx_app
@@ -42,7 +55,7 @@ update_dict()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--device", type=str, default="cuda")
-parser.add_argument("--host", type=str, default="127.0.0.1")
+parser.add_argument("--host", type=str, default="0.0.0.0")
 parser.add_argument("--port", type=int, default=None)
 parser.add_argument("--no_autolaunch", action="store_true")
 parser.add_argument("--share", action="store_true")
