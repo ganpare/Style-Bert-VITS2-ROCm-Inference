@@ -89,6 +89,100 @@ python initialize.py  # 必要なモデルとデフォルトTTSモデルをダ�
 ```
 最後を忘れずに。
 
+#### ROCm Docker環境での実行（ROCm 7.1対応）
+
+AMD GPU（ROCm対応）環境でDockerコンテナとして実行する場合は、以下の手順に従ってください。
+
+**前提条件:**
+- ROCm 7.1 がインストールされたLinux環境（Ubuntu 24.04推奨）
+- Dockerがインストールされていること
+- `/dev/kfd` と `/dev/dri` デバイスへのアクセス権限
+
+**Dockerイメージのビルド:**
+
+```bash
+docker build -t style-bert-vits2-rocm:7.1 .
+```
+
+**モデルの初期化（推論用）:**
+
+推論に必要なモデルをダウンロードします（初回のみ必要）：
+
+```bash
+# 推論用モデルのみをダウンロード（推奨、約数GB）
+./init_docker.sh
+
+# 学習も含む全モデルをダウンロード（約数十GB）
+./init_docker.sh --full
+
+# デフォルトモデルをスキップ（自分のモデルのみ使用する場合）
+./init_docker.sh --skip-default
+```
+
+**docker-composeを使用した起動:**
+
+```bash
+docker-compose up
+```
+
+WebUIは `http://localhost:7860` でアクセスできます。
+
+**docker runを使用した起動:**
+
+シェルスクリプトを使用する方法：
+
+```bash
+./run_rocm_docker.sh app.py
+# または
+./run_rocm_docker.sh server_editor.py
+./run_rocm_docker.sh server_fastapi.py
+```
+
+直接dockerコマンドを使用する方法：
+
+```bash
+docker run -it --rm \
+    --device=/dev/kfd \
+    --device-cgroup-rule='c 226:* rmw' \
+    --security-opt seccomp=unconfined \
+    -e HSA_OVERRIDE_GFX_VERSION=11.0.0 \
+    -e ROCM_VISIBLE_DEVICES=all \
+    -v "$PWD/model_assets:/app/Style-Bert-VITS2/model_assets" \
+    -v "$PWD/inputs:/app/Style-Bert-VITS2/inputs" \
+    -v "$PWD/outputs:/app/Style-Bert-VITS2/outputs" \
+    -p 7860:7860 \
+    -p 8000:8000 \
+    style-bert-vits2-rocm:7.1 \
+    python app.py
+```
+
+**オプショナル依存関係のインストール:**
+
+コンテナ内で以下の機能を使用する場合は、コンテナに入って個別にインストールしてください。
+
+1. **pyannote.audio（スタイル生成の高度な機能用）:**
+
+```bash
+docker exec -it style-bert-vits2-rocm bash
+pip install pyannote.audio
+exit
+```
+
+2. **ONNX変換ツール（ONNX変換機能用）:**
+
+```bash
+docker exec -it style-bert-vits2-rocm bash
+pip install onnx onnxconverter-common onnxsim
+exit
+```
+
+**注意事項:**
+- ベースイメージに含まれるPyTorch 2.8.0は、元のStyle-Bert-VITS2の要件（torch<2.4）を満たしませんが、ROCm環境での動作を優先した構成となっています。
+- GPU認識に問題がある場合は、`HSA_OVERRIDE_GFX_VERSION` 環境変数の値を調整してください。
+- クイックスタートガイド: [QUICKSTART_DOCKER.md](QUICKSTART_DOCKER.md) を参照してください。
+- 詳細な使用方法やトラブルシューティングについては、[DOCKER_USAGE.md](DOCKER_USAGE.md) を参照してください。
+- 詳細な変更点については、[ROCm_Docker_DIFF.md](ROCm_Docker_DIFF.md) を参照してください。
+
 ### 音声合成
 
 音声合成エディターは`Editor.bat`をダブルクリックか、`python server_editor.py --inbrowser`すると起動します（`--device cpu`でCPUモードで起動）。画面内で各セリフごとに設定を変えて原稿を作ったり、保存や読み込みや辞書の編集等ができます。

@@ -1,18 +1,37 @@
-# Dockerfile.deploy用の.dockerignore
-# 日本語のJP-Extraのエディター稼働のみに必要なファイルを指定する
+# Dockerfile (ROCm) 向けの .dockerignore
+# イメージにはアプリケーションコードのみを含め、モデルやデータはホスト側と共有する
 
-*
+# バージョン管理関連
+.git
+.gitignore
 
-!/style_bert_vits2/
+# Pythonキャッシュや仮想環境
+__pycache__/
+*.pyc
+.venv/
+.uv/
 
-!/bert/deberta-v2-large-japanese-char-wwm/
-!/configs/
-!/dict_data/default.csv
-!/model_assets/
-!/static/
+# ローカルデータ・大容量モデル類（ホストからマウント）
+Data/
+inputs/
+outputs/
+model_assets/
+pretrained/
+pretrained_jp_extra/
+slm/
+bert/
+dict_data/
 
-!/config.py
-!/default_config.yml
-!/initialize.py
-!/requirements.txt
-!/server_editor.py
+# その他不要ファイル
+*.bat
+*.ps1
+*.exe
+*.zip
+*.tar
+*.tar.gz
+*.log
+
+# 開発用ファイルやドキュメント（必要に応じてホストで参照）
+docs/
+tests/
+*.ipynb

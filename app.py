@@ -4,6 +4,20 @@ from pathlib import Path
 import gradio as gr
 import torch
 
+try:
+    from gradio_client import utils as gradio_client_utils
+except Exception:  # pragma: no cover
+    gradio_client_utils = None
+else:
+    _original_get_type = gradio_client_utils.get_type
+
+    def _safe_get_type(schema):
+        if isinstance(schema, bool):
+            return "Any" if schema else "Never"
+        return _original_get_type(schema)
+
+    gradio_client_utils.get_type = _safe_get_type
+
 from config import get_path_config
 from gradio_tabs.convert_onnx import create_onnx_app
 from gradio_tabs.dataset import create_dataset_app
@@ -11,6 +25,7 @@ from gradio_tabs.inference import create_inference_app
 from gradio_tabs.merge import create_merge_app
 from gradio_tabs.style_vectors import create_style_vectors_app
 from gradio_tabs.train import create_train_app
+from style_bert_vits2.logging import logger
 from style_bert_vits2.constants import GRADIO_THEME, VERSION
 from style_bert_vits2.nlp.japanese import pyopenjtalk_worker
 from style_bert_vits2.nlp.japanese.user_dict import update_dict
@@ -64,6 +79,22 @@ with gr.Blocks(theme=GRADIO_THEME) as app:
             create_merge_app(model_holder=model_holder)
         with gr.Tab("ONNX変換"):
             create_onnx_app(model_holder=model_holder)
+
+
+_original_get_api_info = getattr(app, "get_api_info", None)
+
+
+def _safe_get_api_info():
+    if _original_get_api_info is None:
+        return {}
+    try:
+        return _original_get_api_info()
+    except Exception as exc:  # pragma: no cover
+        logger.warning("Failed to build Gradio API schema: %s", exc)
+        return {}
+
+
+app.get_api_info = _safe_get_api_info
 
 app.launch(
     server_name=args.host,
